@@ -1,0 +1,62 @@
+[
+    {
+        "aadharNumber": "123456789012",
+        "name": "John Doe",
+        "dob": "1990-01-01",
+        "gender": "Male",
+        "address": {
+            "houseNumber": "101",
+            "street": "Main Street",
+            "city": "Mumbai",
+            "state": "Maharashtra",
+            "pincode": "400001"
+        },
+        "phone": "+91 9876543210",
+        "email": "johndoe@example.com"
+    },
+    {
+        "aadharNumber": "987654321098",
+        "name": "Harshit Bafna",
+        "dob": "2003-10-19",
+        "gender": "Male",
+        "address": {
+            "houseNumber": "202",
+            "street": "High Street",
+            "city": "Delhi",
+            "state": "Delhi",
+            "pincode": "110001"
+        },
+        "phone": "+91 9876543221",
+        "email": "janesmith@example.com"
+    },
+    {
+        "aadharNumber": "135791357913",
+        "name": "Alice Johnson",
+        "dob": "1995-03-03",
+        "gender": "Female",
+        "address": {
+            "houseNumber": "303",
+            "street": "Low Street",
+            "city": "Bangalore",
+            "state": "Karnataka",
+            "pincode": "560001"
+        },
+        "phone": "+91 9876543232",
+        "email": "alicejohnson@example.com"
+    },
+    {
+        "aadharNumber": "135791357913",
+        "name": "Harshit Bafna",
+        "dob": "2003-10-19",
+        "gender": "Male",
+        "address": {
+            "houseNumber": "303",
+            "street": "Low Street",
+            "city": "Bangalore",
+            "state": "Karnataka",
+            "pincode": "560001"
+        },
+        "phone": "+91 8817346229",
+        "email": "harshit@gmail.com"
+    }
+]

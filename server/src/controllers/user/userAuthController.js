@@ -1,10 +1,11 @@
-const asyncHandler = require('../utils/asyncHandler')
-const { ApiError } = require('../utils/ApiError')
-const { ApiResponse } = require('../utils/ApiResponse')
-const User = require('../models/user')
+const asyncHandler = require('../../utils/asyncHandler')
+const { ApiError } = require('../../utils/ApiError')
+const { ApiResponse } = require('../../utils/ApiResponse')
+const User = require('../../models/user')
 const cookie = require('cookie-parser')
-const { uploadOnCloudinary } = require('../utils/cloudinary')
+const { uploadOnCloudinary } = require('../../utils/cloudinary')
 const jwt = require('jsonwebtoken')
+const { isEmailValid, isPhoneNumberValid, isPasswordStrong, isValidDOB } = require('../../utils/validations')
 
 const generateAccessOrRefreshToken = async (userId) => {
     try {
@@ -17,9 +18,13 @@ const generateAccessOrRefreshToken = async (userId) => {
 
         return { accessToken, refreshToken };
     } catch (error) {
-        throw new ApiError(500, "Something went wrong while login");
+        if (error instanceof ApiError) {
+            return next(error);
+        }
+
+        next(new ApiError(500, "Something went wrong while login"));
     }
-};
+}
 
 const options = {
     httpOnly: true,
@@ -32,6 +37,7 @@ const register = asyncHandler(async (req, res) => {
         fullName,
         email,
         password,
+        dateOfBirth,
         phoneNumber,
         houseNumber, area, landmark, city, state, country, pincode,
         verificationStatus = false
@@ -39,18 +45,34 @@ const register = asyncHandler(async (req, res) => {
 
     if (
         [
-            avatar, fullName, email, password, phoneNumber, houseNumber, area, landmark, city, state, country, pincode
+            avatar, fullName, email, password, dateOfBirth, phoneNumber, houseNumber, area, landmark, city, state, country, pincode
         ].some((field) => field?.trim() === "")
     ) {
-        throw new ApiError(400, "All fields are required")
+        throw new ApiError(400, "All fields are required");
+    }
+
+    if (!isEmailValid(email)) {
+        throw new ApiError(400, "Invalid Email Address");
+    }
+    if (!isPhoneNumberValid(phoneNumber)) {
+        throw new ApiError(400, "Invalid Phone Number");
+    } 
+    if (!isPasswordStrong(password)) {
+        throw new ApiError(400, "Password too weak");
+    } 
+    if (!verificationStatus) {
+        throw new ApiError(400, "Please validate your email, phone number, and Aadhar Number");
+    } 
+    if (!isValidDOB(dateOfBirth)) {
+        throw new ApiError(400, "Please enter a valid date of birth");
     }
 
     const isUser = await User.findOne({
         $or: [{ email }, { phoneNumber }]
-    })
+    });
 
     if (isUser) {
-        throw new ApiError(409, "User with email or phonenumber already existed.")
+        throw new ApiError(409, "User with this email or phone number already exists.");
     }
 
     const avatarLocalPath = req.files?.avatar[0]?.path;
@@ -60,7 +82,7 @@ const register = asyncHandler(async (req, res) => {
 
     const avatarPath = await uploadOnCloudinary(avatarLocalPath);
     if (!avatarPath) {
-        throw new ApiError(400, "Avatar is required");
+        throw new ApiError(400, "Error uploading avatar. Please try again.");
     }
 
     const newUser = await User.create({
@@ -68,23 +90,24 @@ const register = asyncHandler(async (req, res) => {
         fullName,
         email,
         password,
+        dateOfBirth,
         phoneNumber,
         address: {
             houseNumber, area, landmark, city, state, country, pincode
         },
         verificationStatus
-    })
+    });
 
     const createdUser = await User.findById(newUser._id).select(
         "-password -role -refreshToken"
-    )
+    );
 
     if (!createdUser) {
-        throw new ApiError(500, "Something went wrong while registering the user");
+        throw new ApiError(500, "Something went wrong while registering the user.");
     }
 
     return res.status(201).json(
-        new ApiResponse(200, createdUser, "User registered successfully")
+        new ApiResponse(201, createdUser, "User registered successfully")
     );
 })
 
@@ -108,7 +131,6 @@ const login = asyncHandler(async (req, res) => {
     }
 
     const { accessToken, refreshToken } = await generateAccessOrRefreshToken(user._id);
-
     const loggedInUser = await User.findById(user._id).select("-role -password -verificationStatus -refreshToken");
     res.status(200)
         .cookie("accessToken", accessToken, options)
@@ -124,7 +146,7 @@ const login = asyncHandler(async (req, res) => {
                 "User LoggedIn Successfully"
             )
         );
-});
+})
 
 const logout = asyncHandler(async (req, res) => {
     await User.findByIdAndUpdate(

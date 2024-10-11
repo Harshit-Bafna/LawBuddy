@@ -22,6 +22,10 @@ const userSchema = new mongoose.Schema(
             type: String,
             required: true
         },
+        dateOfBirth: {
+            type: Date,
+            required: true
+        },
         role: {
             type: [String],
             enum: ['super_admin', 'admin', 'editor', 'lawyer', 'user', 'creator'],
@@ -68,11 +72,6 @@ const userSchema = new mongoose.Schema(
             type: Boolean,
             default: false
         },
-        likedVideos: {
-            type: [mongoose.Schema.Types.ObjectId],
-            ref: "Video",
-            default: null
-        },
         refreshToken: {
             type: String,
             default: null
@@ -98,8 +97,7 @@ userSchema.methods.generateAccessToken = async function () {
     return await jwt.sign(
         {
             _id: this._id,
-            fullName: this.fullName,
-            role: this.role
+            fullName: this.fullName
         },
         process.env.ACCESS_TOKEN_SECRET,
         {
